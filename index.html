@@ -1,0 +1,2332 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Green NH₃ ESG統合ダッシュボード</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
+            background: #f8f9fc;
+            color: #1a2332;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Title Banner Animation */
+        #titleBanner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0f766e 0%, #14b8a6 50%, #2dd4bf 100%);
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            animation: fadeOut 0.5s ease 2.5s forwards;
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                visibility: hidden;
+            }
+        }
+
+        .banner-logo {
+            font-size: 4.5rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 1rem;
+            letter-spacing: -1px;
+            animation: slideIn 1s ease;
+        }
+
+        .banner-subtitle {
+            font-size: 1.5rem;
+            font-weight: 400;
+            color: #ccfbf1;
+            letter-spacing: 2px;
+            animation: slideIn 1s ease 0.3s both;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Main App */
+        #mainApp {
+            opacity: 0;
+            animation: fadeIn 0.5s ease 3s forwards;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Header */
+        .header {
+            background: #ffffff;
+            padding: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #0f766e;
+            letter-spacing: -0.5px;
+            padding: 1.2rem 2rem;
+        }
+
+        .nav {
+            display: flex;
+            height: 100%;
+        }
+
+        .nav-item {
+            color: #64748b;
+            cursor: pointer;
+            padding: 1.2rem 1.5rem;
+            transition: all 0.2s;
+            position: relative;
+            font-weight: 500;
+            font-size: 0.95rem;
+            border-bottom: 2px solid transparent;
+        }
+
+        .nav-item:hover {
+            color: #0f766e;
+            background: #f0fdfa;
+        }
+
+        .nav-item.active {
+            color: #0f766e;
+            border-bottom-color: #0f766e;
+            background: #f0fdfa;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.2rem 2rem;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        /* Main Container */
+        .container {
+            padding: 2rem 2.5rem;
+            max-width: 1920px;
+            margin: 0 auto;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            font-size: 0.95rem;
+            color: #64748b;
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Card Styles */
+        .card {
+            background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+            border-radius: 12px;
+            padding: 1.75rem;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #0f766e 0%, #14b8a6 50%, #2dd4bf 100%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 28px rgba(15, 118, 110, 0.12), 0 4px 8px rgba(15, 118, 110, 0.08);
+            border-color: #99f6e4;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 0.8rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .card-value {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0.5rem 0;
+            line-height: 1;
+        }
+
+        .card-change {
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-weight: 600;
+        }
+
+        .positive {
+            color: #10b981;
+        }
+
+        .negative {
+            color: #ef4444;
+        }
+
+        .warning {
+            color: #f59e0b;
+        }
+
+        /* Alert Banner - Advanced */
+        .alert-banner-advanced {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border-radius: 12px;
+            border: 1px solid #fecaca;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1);
+            overflow: hidden;
+            animation: alertPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes alertPulse {
+            0%, 100% {
+                box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1);
+            }
+            50% {
+                box-shadow: 0 4px 20px rgba(239, 68, 68, 0.2);
+            }
+        }
+
+        .alert-content-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            gap: 2rem;
+        }
+
+        .alert-left {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            flex: 1;
+        }
+
+        .alert-icon-wrapper {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+        }
+
+        .alert-text-content {
+            flex: 1;
+        }
+
+        .alert-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #991b1b;
+            margin-bottom: 0.25rem;
+            letter-spacing: -0.01em;
+        }
+
+        .alert-description {
+            font-size: 0.9rem;
+            color: #7f1d1d;
+            margin-bottom: 0.5rem;
+            line-height: 1.5;
+        }
+
+        .alert-description strong {
+            font-weight: 800;
+            color: #dc2626;
+        }
+
+        .alert-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            font-size: 0.8rem;
+            color: #991b1b;
+        }
+
+        .alert-badge {
+            background: #dc2626;
+            color: #ffffff;
+            padding: 0.25rem 0.6rem;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .alert-time, .alert-source {
+            opacity: 0.8;
+        }
+
+        .alert-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .alert-btn-primary {
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+            color: #ffffff;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+            white-space: nowrap;
+        }
+
+        .alert-btn-primary:hover {
+            background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+        }
+
+        .alert-btn-secondary {
+            background: rgba(220, 38, 38, 0.1);
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            color: #dc2626;
+            padding: 0.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+        }
+
+        .alert-btn-secondary:hover {
+            background: rgba(220, 38, 38, 0.2);
+            border-color: rgba(220, 38, 38, 0.5);
+        }
+
+        .alert-progress-bar {
+            height: 4px;
+            background: rgba(220, 38, 38, 0.1);
+            position: relative;
+        }
+
+        .alert-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #dc2626 0%, #ef4444 100%);
+            transition: width 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .alert-progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                transform: translateX(-100%);
+            }
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        /* Responsive Alert */
+        @media (max-width: 768px) {
+            .alert-content-wrapper {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .alert-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .alert-btn-primary {
+                flex: 1;
+            }
+        }
+
+        /* Chart Container */
+        .chart-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 1.25rem;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+            transition: all 0.3s;
+        }
+
+        .chart-container:hover {
+            box-shadow: 0 8px 24px rgba(15, 118, 110, 0.08);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f3f4f6;
+        }
+
+        .chart-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #0f172a;
+            letter-spacing: -0.01em;
+        }
+
+        .chart-controls {
+            display: flex;
+            gap: 0.5rem;
+            background: #f9fafb;
+            padding: 0.25rem;
+            border-radius: 8px;
+        }
+
+        .chart-btn {
+            padding: 0.5rem 1.25rem;
+            background: transparent;
+            border: none;
+            color: #64748b;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .chart-btn:hover {
+            color: #0f766e;
+            background: #ffffff;
+        }
+
+        .chart-btn.active {
+            background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(15, 118, 110, 0.3);
+        }
+
+        /* Bar Chart Animation */
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 280px;
+            gap: 1rem;
+            padding: 0 1rem;
+        }
+
+        .bar {
+            flex: 1;
+            background: linear-gradient(180deg, #14b8a6 0%, #0f766e 100%);
+            border-radius: 6px 6px 0 0;
+            position: relative;
+            animation: growBar 1.5s ease;
+            transition: all 0.2s;
+            box-shadow: 0 -2px 8px rgba(20, 184, 166, 0.2);
+        }
+
+        .bar:hover {
+            background: linear-gradient(180deg, #2dd4bf 0%, #14b8a6 100%);
+            transform: translateY(-4px);
+        }
+
+        @keyframes growBar {
+            from {
+                height: 0;
+            }
+        }
+
+        .bar-label {
+            position: absolute;
+            bottom: -28px;
+            width: 100%;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .bar-value {
+            position: absolute;
+            top: -28px;
+            width: 100%;
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        /* Line Chart */
+        .line-chart {
+            position: relative;
+            height: 220px;
+            margin-top: 2rem;
+        }
+
+        .line-path {
+            stroke: #0f766e;
+            stroke-width: 3;
+            fill: none;
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: drawLine 2s ease forwards;
+        }
+
+        @keyframes drawLine {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+
+        .line-fill {
+            fill: url(#lineGradient);
+            opacity: 0;
+            animation: fadeInFill 1s ease 1s forwards;
+        }
+
+        @keyframes fadeInFill {
+            to {
+                opacity: 0.2;
+            }
+        }
+
+        /* Data Table */
+        .data-table {
+            width: 100%;
+            background: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+        }
+
+        .data-table thead {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .data-table th {
+            padding: 1.25rem 1.5rem;
+            text-align: left;
+            color: #334155;
+            font-weight: 700;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .data-table td {
+            padding: 1.25rem 1.5rem;
+            border-top: 1px solid #f3f4f6;
+            color: #1f2937;
+            font-size: 0.9rem;
+        }
+
+        .data-table tbody tr {
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .data-table tbody tr:hover {
+            background: linear-gradient(90deg, #f0fdfa 0%, #ffffff 100%);
+            border-left-color: #14b8a6;
+        }
+
+        /* Status Badge */
+        .status-badge {
+            padding: 0.35rem 0.85rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .status-verified {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-processing {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        /* Real-time Counter */
+        .realtime-counter {
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Button */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+            box-shadow: 0 1px 3px rgba(15, 118, 110, 0.3);
+        }
+
+        .btn:hover {
+            background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(15, 118, 110, 0.3);
+        }
+
+        .btn-secondary {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            color: #374151;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+
+        .btn-secondary:hover {
+            background: #f9fafb;
+            border-color: #d1d5db;
+        }
+
+        /* Report Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 2.5rem;
+            max-width: 600px;
+            width: 90%;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-body {
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #374151;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 0.75rem;
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            color: #1f2937;
+            font-size: 0.95rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: #14b8a6;
+            box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            margin: 2rem 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #f3f4f6;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            margin-top: 0.5rem;
+            text-align: center;
+            color: #64748b;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Grid Layout for Reports */
+        .report-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.25rem;
+            margin-top: 2rem;
+        }
+
+        .report-card {
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 1.75rem;
+            border: 1px solid #e5e7eb;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+
+        .report-card:hover {
+            transform: translateY(-4px);
+            border-color: #14b8a6;
+            box-shadow: 0 8px 24px rgba(15, 118, 110, 0.15);
+        }
+
+        .report-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 0.5rem;
+        }
+
+        .report-desc {
+            font-size: 0.85rem;
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.25rem;
+            margin: 2rem 0;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 1.5rem;
+            background: #ffffff;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #0f766e;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        /* Metric Cards */
+        .metric-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .metric-card {
+            background: #f9fafb;
+            padding: 1.25rem;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .metric-label {
+            font-size: 0.8rem;
+            color: #64748b;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .metric-trend {
+            font-size: 0.8rem;
+            margin-top: 0.25rem;
+            font-weight: 600;
+        }
+
+        /* Info Panel */
+        .info-panel {
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
+            padding: 1.5rem;
+            border-radius: 10px;
+            border-left: 4px solid #14b8a6;
+            margin-bottom: 1.25rem;
+        }
+
+        .info-title {
+            font-weight: 700;
+            color: #0f766e;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .info-text {
+            color: #115e59;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        /* Section Divider */
+        .section-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #e5e7eb, transparent);
+            margin: 2.5rem 0;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+
+        @keyframes slideOutUp {
+            from {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Title Banner -->
+    <div id="titleBanner">
+        <div class="banner-logo">Green NH₃</div>
+        <div class="banner-subtitle">ESG統合ダッシュボード</div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="mainApp">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">Green NH₃ ESG Platform</div>
+            <nav class="nav">
+                <div class="nav-item active" onclick="showPage('dashboard')">ダッシュボード</div>
+                <div class="nav-item" onclick="showPage('mrv')">MRV管理</div>
+                <div class="nav-item" onclick="showPage('reports')">レポート生成</div>
+            </nav>
+            <div class="user-info">
+                <span id="currentTime"></span>
+                <span>管理者アカウント</span>
+            </div>
+        </header>
+
+        <!-- Main Container -->
+        <div class="container">
+            <!-- Dashboard Page -->
+            <div id="dashboard" class="page active">
+                <!-- Alert Banner -->
+                <div class="alert-banner-advanced">
+                    <div class="alert-content-wrapper">
+                        <div class="alert-left">
+                            <div class="alert-icon-wrapper">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                                </svg>
+                            </div>
+                            <div class="alert-text-content">
+                                <div class="alert-title">排出量超過アラート</div>
+                                <div class="alert-description">CO₂排出量が目標値を<strong>12.4%</strong>超過しています（+1,847 t-CO₂）</div>
+                                <div class="alert-meta">
+                                    <span class="alert-badge">高優先度</span>
+                                    <span class="alert-time">• 2分前に検出</span>
+                                    <span class="alert-source">• Scope 3 サプライチェーン</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="alert-actions">
+                            <button class="alert-btn-primary" onclick="showOptimizationPlan()">
+                                最適化プランを表示
+                            </button>
+                            <button class="alert-btn-secondary" onclick="dismissAlert()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="alert-progress-bar">
+                        <div class="alert-progress-fill" style="width: 12.4%;"></div>
+                    </div>
+                </div>
+
+                <!-- KPI Cards -->
+                <div class="dashboard-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">総CO₂削減量</div>
+                                <div class="card-value"><span class="realtime-counter" id="co2Reduction">0</span>t-CO₂</div>
+                                <div class="card-change positive">↑ 18.3% 前月比</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">ESGスコア</div>
+                                <div class="card-value"><span class="realtime-counter" id="esgScore">0</span>/100</div>
+                                <div class="card-change positive">↑ 5.2pts 前四半期比</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">証書検証数</div>
+                                <div class="card-value"><span class="realtime-counter" id="certificates">0</span>件</div>
+                                <div class="card-change positive">↑ 24.7% 前月比</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">コスト削減効果</div>
+                                <div class="card-value">¥<span class="realtime-counter" id="costSaving">0</span>M</div>
+                                <div class="card-change positive">↑ 31.5% 前月比</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart Section -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <div class="chart-title">月次CO₂排出量推移</div>
+                        <div class="chart-controls">
+                            <button class="chart-btn active">月次</button>
+                            <button class="chart-btn">四半期</button>
+                            <button class="chart-btn">年次</button>
+                        </div>
+                    </div>
+                    <div class="bar-chart">
+                        <div class="bar" style="height: 58%;">
+                            <div class="bar-value">2,180</div>
+                            <div class="bar-label">6月</div>
+                        </div>
+                        <div class="bar" style="height: 65%;">
+                            <div class="bar-value">2,450</div>
+                            <div class="bar-label">7月</div>
+                        </div>
+                        <div class="bar" style="height: 52%;">
+                            <div class="bar-value">1,950</div>
+                            <div class="bar-label">8月</div>
+                        </div>
+                        <div class="bar" style="height: 70%;">
+                            <div class="bar-value">2,640</div>
+                            <div class="bar-label">9月</div>
+                        </div>
+                        <div class="bar" style="height: 82%;">
+                            <div class="bar-value">3,080</div>
+                            <div class="bar-label">10月</div>
+                        </div>
+                        <div class="bar" style="height: 48%;">
+                            <div class="bar-value">1,800</div>
+                            <div class="bar-label">11月</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-row">
+                    <div class="metric-card">
+                        <div class="metric-label">Scope 1 排出量</div>
+                        <div class="metric-value"><span class="realtime-counter">4,523</span>t</div>
+                        <div class="metric-trend negative">↑ 3.2%</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Scope 2 排出量</div>
+                        <div class="metric-value"><span class="realtime-counter">7,891</span>t</div>
+                        <div class="metric-trend positive">↓ 8.1%</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Scope 3 排出量</div>
+                        <div class="metric-value"><span class="realtime-counter">18,234</span>t</div>
+                        <div class="metric-trend positive">↓ 12.4%</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">再エネ比率</div>
+                        <div class="metric-value"><span class="realtime-counter">47</span>%</div>
+                        <div class="metric-trend positive">↑ 5.3%</div>
+                    </div>
+                </div>
+
+                <!-- SVG Line Chart -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <div class="chart-title">ESGスコア総合評価トレンド</div>
+                        <div class="chart-controls">
+                            <button class="chart-btn active">環境</button>
+                            <button class="chart-btn">社会</button>
+                            <button class="chart-btn">ガバナンス</button>
+                        </div>
+                    </div>
+                    <div style="position: relative;">
+                        <svg width="100%" height="240" class="line-chart" viewBox="0 0 1100 240" preserveAspectRatio="none">
+                            <defs>
+                                <linearGradient id="lineGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#0f766e;stop-opacity:0.2" />
+                                    <stop offset="100%" style="stop-color:#0f766e;stop-opacity:0" />
+                                </linearGradient>
+                            </defs>
+                            <!-- Grid lines -->
+                            <line x1="0" y1="50" x2="1100" y2="50" stroke="#e5e7eb" stroke-width="1"/>
+                            <line x1="0" y1="100" x2="1100" y2="100" stroke="#e5e7eb" stroke-width="1"/>
+                            <line x1="0" y1="150" x2="1100" y2="150" stroke="#e5e7eb" stroke-width="1"/>
+                            <line x1="0" y1="200" x2="1100" y2="200" stroke="#e5e7eb" stroke-width="1"/>
+                            
+                            <path class="line-fill" d="M 0 220 L 0 180 L 140 160 L 280 155 L 420 135 L 560 120 L 700 105 L 840 85 L 1100 60 L 1100 220 Z" />
+                            <path class="line-path" d="M 0 180 L 140 160 L 280 155 L 420 135 L 560 120 L 700 105 L 840 85 L 1100 60" />
+                            
+                            <!-- Data points -->
+                            <circle cx="0" cy="180" r="4" fill="#0f766e"/>
+                            <circle cx="140" cy="160" r="4" fill="#0f766e"/>
+                            <circle cx="280" cy="155" r="4" fill="#0f766e"/>
+                            <circle cx="420" cy="135" r="4" fill="#0f766e"/>
+                            <circle cx="560" cy="120" r="4" fill="#0f766e"/>
+                            <circle cx="700" cy="105" r="4" fill="#0f766e"/>
+                            <circle cx="840" cy="85" r="4" fill="#0f766e"/>
+                            <circle cx="1100" cy="60" r="4" fill="#0f766e"/>
+                        </svg>
+                        <!-- X-axis labels -->
+                        <div style="display: flex; justify-content: space-between; margin-top: 0.5rem; padding: 0 0.5rem;">
+                            <span style="font-size: 0.75rem; color: #64748b;">4月</span>
+                            <span style="font-size: 0.75rem; color: #64748b;">5月</span>
+                            <span style="font-size: 0.75rem; color: #64748b;">6月</span>
+                            <span style="font-size: 0.75rem; color: #64748b;">7月</span>
+                            <span style="font-size: 0.75rem; color: #64748b;">8月</span>
+                            <span style="font-size: 0.75rem; color: #64748b;">9月</span>
+                            <span style="font-size: 0.75rem; color: #64748b;">10月</span>
+                            <span style="font-size: 0.75rem; color: #64748b;">11月</span>
+                        </div>
+                        <!-- Y-axis labels -->
+                        <div style="position: absolute; left: -2.5rem; top: 0; height: 240px; display: flex; flex-direction: column; justify-content: space-between; font-size: 0.75rem; color: #64748b;">
+                            <span>100</span>
+                            <span>75</span>
+                            <span>50</span>
+                            <span>25</span>
+                            <span>0</span>
+                        </div>
+                        <!-- Current value indicator -->
+                        <div style="position: absolute; right: 1rem; top: 3rem; background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%); color: white; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 700; font-size: 1.25rem; box-shadow: 0 4px 12px rgba(15, 118, 110, 0.3);">
+                            87.3点
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-panel">
+                    <div class="info-title">システム統合状況</div>
+                    <div class="info-text">MRV（測定・報告・検証）、LCA（ライフサイクルアセスメント）、証書管理システムが完全統合され、リアルタイムでデータ同期中。次回自動レポート生成: 2025年11月15日 09:00</div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value">98.7%</div>
+                        <div class="stat-label">データ精度</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">24h</div>
+                        <div class="stat-label">更新頻度</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">156</div>
+                        <div class="stat-label">接続サプライヤー</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">12</div>
+                        <div class="stat-label">統合システム</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MRV Management Page -->
+            <div id="mrv" class="page">
+                <div class="page-header">
+                    <h2 class="page-title">MRV（測定・報告・検証）管理システム</h2>
+                    <p class="page-subtitle">グリーンNH₃サプライチェーン全体のカーボンフットプリントを一元管理</p>
+                </div>
+
+                <div class="metric-row">
+                    <div class="metric-card">
+                        <div class="metric-label">検証済プロジェクト</div>
+                        <div class="metric-value"><span class="realtime-counter">47</span>件</div>
+                        <div class="metric-trend positive">↑ 12件 今月</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">処理中プロジェクト</div>
+                        <div class="metric-value"><span class="realtime-counter">23</span>件</div>
+                        <div class="metric-trend">進行中</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">累計削減量</div>
+                        <div class="metric-value"><span class="realtime-counter">127,845</span>t</div>
+                        <div class="metric-trend positive">↑ 18.3%</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">平均検証期間</div>
+                        <div class="metric-value"><span class="realtime-counter">4.2</span>日</div>
+                        <div class="metric-trend positive">↓ 1.3日</div>
+                    </div>
+                </div>
+
+                <div class="info-panel">
+                    <div class="info-title">LCA統合分析</div>
+                    <div class="info-text">原料調達から製造、輸送、使用までのライフサイクル全体でCO₂排出量を追跡。ISO 14064-1準拠の第三者検証を自動実行し、証書発行までのリードタイムを従来比80%短縮。</div>
+                </div>
+                
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>プロジェクトID</th>
+                            <th>サプライヤー</th>
+                            <th>測定日時</th>
+                            <th>CO₂削減量</th>
+                            <th>検証ステータス</th>
+                            <th>証書番号</th>
+                            <th>LCAスコア</th>
+                        </tr>
+                    </thead>
+                    <tbody id="mrvTableBody">
+                        <tr>
+                            <td><strong>PRJ-2025-001</strong></td>
+                            <td>サプライヤーA</td>
+                            <td>2025-10-15 14:23</td>
+                            <td><span class="realtime-counter">1,247</span>t-CO₂</td>
+                            <td><span class="status-badge status-verified">検証済</span></td>
+                            <td>CERT-NH3-2025-0001</td>
+                            <td>A+</td>
+                        </tr>
+                        <tr>
+                            <td><strong>PRJ-2025-002</strong></td>
+                            <td>サプライヤーB</td>
+                            <td>2025-10-28 09:47</td>
+                            <td><span class="realtime-counter">2,135</span>t-CO₂</td>
+                            <td><span class="status-badge status-processing">処理中</span></td>
+                            <td>-</td>
+                            <td>A</td>
+                        </tr>
+                        <tr>
+                            <td><strong>PRJ-2025-003</strong></td>
+                            <td>サプライヤーC</td>
+                            <td>2025-11-01 16:52</td>
+                            <td><span class="realtime-counter">3,489</span>t-CO₂</td>
+                            <td><span class="status-badge status-pending">検証待</span></td>
+                            <td>-</td>
+                            <td>A+</td>
+                        </tr>
+                        <tr>
+                            <td><strong>PRJ-2025-004</strong></td>
+                            <td>サプライヤーD</td>
+                            <td>2025-11-03 11:18</td>
+                            <td><span class="realtime-counter">1,876</span>t-CO₂</td>
+                            <td><span class="status-badge status-verified">検証済</span></td>
+                            <td>CERT-NH3-2025-0002</td>
+                            <td>A</td>
+                        </tr>
+                        <tr>
+                            <td><strong>PRJ-2025-005</strong></td>
+                            <td>サプライヤーE</td>
+                            <td>2025-11-04 08:35</td>
+                            <td><span class="realtime-counter">4,521</span>t-CO₂</td>
+                            <td><span class="status-badge status-processing">処理中</span></td>
+                            <td>-</td>
+                            <td>A+</td>
+                        </tr>
+                        <tr>
+                            <td><strong>PRJ-2025-006</strong></td>
+                            <td>サプライヤーF</td>
+                            <td>2025-11-04 13:09</td>
+                            <td><span class="realtime-counter">2,943</span>t-CO₂</td>
+                            <td><span class="status-badge status-verified">検証済</span></td>
+                            <td>CERT-NH3-2025-0003</td>
+                            <td>A</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <button class="btn" onclick="openProjectModal()">新規プロジェクト登録</button>
+                    <button class="btn btn-secondary" onclick="openImportModal()">一括データインポート</button>
+                    <button class="btn btn-secondary" onclick="exportVerificationReport()">検証レポート出力</button>
+                    <button class="btn btn-secondary" onclick="requestCertificate()">証書発行申請</button>
+                </div>
+
+                <div class="section-divider"></div>
+
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <div class="chart-title">サプライヤー別削減量内訳</div>
+                    </div>
+                    <div class="bar-chart">
+                        <div class="bar" style="height: 45%;">
+                            <div class="bar-value">1,247</div>
+                            <div class="bar-label">A社</div>
+                        </div>
+                        <div class="bar" style="height: 78%;">
+                            <div class="bar-value">2,135</div>
+                            <div class="bar-label">B社</div>
+                        </div>
+                        <div class="bar" style="height: 95%;">
+                            <div class="bar-value">3,489</div>
+                            <div class="bar-label">C社</div>
+                        </div>
+                        <div class="bar" style="height: 52%;">
+                            <div class="bar-value">1,876</div>
+                            <div class="bar-label">D社</div>
+                        </div>
+                        <div class="bar" style="height: 88%;">
+                            <div class="bar-value">4,521</div>
+                            <div class="bar-label">E社</div>
+                        </div>
+                        <div class="bar" style="height: 68%;">
+                            <div class="bar-value">2,943</div>
+                            <div class="bar-label">F社</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reports Page -->
+            <div id="reports" class="page">
+                <div class="page-header">
+                    <h2 class="page-title">ESGレポート自動生成システム</h2>
+                    <p class="page-subtitle">TCFD・TNFD対応レポートを80%の工数削減、3ヶ月でPoCを実現</p>
+                </div>
+
+                <div class="metric-row">
+                    <div class="metric-card">
+                        <div class="metric-label">今月生成レポート</div>
+                        <div class="metric-value"><span class="realtime-counter">124</span>件</div>
+                        <div class="metric-trend positive">↑ 34件</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">平均生成時間</div>
+                        <div class="metric-value"><span class="realtime-counter">8</span>分</div>
+                        <div class="metric-trend positive">↓ 72%</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">累計レポート数</div>
+                        <div class="metric-value"><span class="realtime-counter">2,847</span>件</div>
+                        <div class="metric-trend positive">↑ 156%</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">工数削減率</div>
+                        <div class="metric-value"><span class="realtime-counter">82</span>%</div>
+                        <div class="metric-trend positive">目標達成</div>
+                    </div>
+                </div>
+
+                <div class="info-panel">
+                    <div class="info-title">統合レポーティングフレームワーク</div>
+                    <div class="info-text">TCFD（気候関連財務情報開示）、TNFD（自然関連財務情報開示）、GRIスタンダード、CDP、ISO 14064など、主要な国際基準に準拠したレポートを自動生成。データソースからレポート出力まで完全自動化し、監査対応も効率化。</div>
+                </div>
+
+                <h3 style="font-size: 1.2rem; font-weight: 700; color: #0f172a; margin: 2rem 0 1rem 0;">レポートテンプレート</h3>
+
+                <div class="report-grid">
+                    <div class="report-card" onclick="openReportModal('TCFD')">
+                        <div class="report-title">TCFDレポート</div>
+                        <div class="report-desc">気候関連財務情報開示タスクフォースの推奨に基づく、ガバナンス・戦略・リスク管理・指標と目標の4項目を網羅したレポート</div>
+                    </div>
+
+                    <div class="report-card" onclick="openReportModal('TNFD')">
+                        <div class="report-title">TNFDレポート</div>
+                        <div class="report-desc">自然関連財務情報開示フレームワークに対応。生物多様性への依存・影響を評価し、LEAPアプローチで分析</div>
+                    </div>
+
+                    <div class="report-card" onclick="openReportModal('GRI')">
+                        <div class="report-title">GRIスタンダード</div>
+                        <div class="report-desc">グローバル・レポーティング・イニシアチブの最新基準に準拠。マテリアリティ分析とステークホルダーエンゲージメントを統合</div>
+                    </div>
+
+                    <div class="report-card" onclick="openReportModal('CDP')">
+                        <div class="report-title">CDP開示</div>
+                        <div class="report-desc">気候変動・水セキュリティ・フォレストの3分野における環境パフォーマンスを開示。投資家向けスコアリング対応</div>
+                    </div>
+
+                    <div class="report-card" onclick="openReportModal('ISO')">
+                        <div class="report-title">ISO 14064検証</div>
+                        <div class="report-desc">温室効果ガス排出量の定量化・報告・検証に関する国際規格準拠レポート。第三者検証機関への提出用データ自動生成</div>
+                    </div>
+
+                    <div class="report-card" onclick="openReportModal('SASB')">
+                        <div class="report-title">SASBスタンダード</div>
+                        <div class="report-desc">サステナビリティ会計基準審議会の業界別基準に対応。マテリアルな情報を投資家向けに最適化</div>
+                    </div>
+
+                    <div class="report-card" onclick="openReportModal('SBTi')">
+                        <div class="report-title">SBTi目標設定</div>
+                        <div class="report-desc">Science Based Targetsイニシアチブに基づく削減目標の設定・進捗管理レポート。1.5℃シナリオ対応</div>
+                    </div>
+
+                    <div class="report-card" onclick="openReportModal('Custom')">
+                        <div class="report-title">カスタムレポート</div>
+                        <div class="report-desc">企業独自のKPI・フォーマットに対応。経営層向けダッシュボードやステークホルダー別レポートを柔軟に作成</div>
+                    </div>
+                </div>
+
+                <div class="section-divider"></div>
+
+                <h3 style="font-size: 1.2rem; font-weight: 700; color: #0f172a; margin: 2rem 0 1rem 0;">最近生成されたレポート</h3>
+
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>レポート名</th>
+                            <th>タイプ</th>
+                            <th>生成日時</th>
+                            <th>対象期間</th>
+                            <th>ページ数</th>
+                            <th>ステータス</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>2025年Q3統合報告書</strong></td>
+                            <td>TCFD + TNFD</td>
+                            <td>2025-11-04 09:23</td>
+                            <td>2025 Q3</td>
+                            <td>87ページ</td>
+                            <td><span class="status-badge status-verified">完了</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>サステナビリティレポート2025</strong></td>
+                            <td>GRI + CDP</td>
+                            <td>2025-11-03 14:47</td>
+                            <td>2025年度</td>
+                            <td>124ページ</td>
+                            <td><span class="status-badge status-verified">完了</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>カーボンニュートラル進捗報告</strong></td>
+                            <td>SBTi</td>
+                            <td>2025-11-02 16:12</td>
+                            <td>2025年1-10月</td>
+                            <td>42ページ</td>
+                            <td><span class="status-badge status-verified">完了</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>投資家向けESG説明資料</strong></td>
+                            <td>カスタム</td>
+                            <td>2025-11-01 11:55</td>
+                            <td>2025 Q3</td>
+                            <td>28ページ</td>
+                            <td><span class="status-badge status-verified">完了</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="chart-container" style="margin-top: 2rem;">
+                    <div class="chart-header">
+                        <div class="chart-title">月別レポート生成実績</div>
+                    </div>
+                    <div class="bar-chart">
+                        <div class="bar" style="height: 55%;">
+                            <div class="bar-value">78</div>
+                            <div class="bar-label">6月</div>
+                        </div>
+                        <div class="bar" style="height: 68%;">
+                            <div class="bar-value">95</div>
+                            <div class="bar-label">7月</div>
+                        </div>
+                        <div class="bar" style="height: 72%;">
+                            <div class="bar-value">102</div>
+                            <div class="bar-label">8月</div>
+                        </div>
+                        <div class="bar" style="height: 85%;">
+                            <div class="bar-value">118</div>
+                            <div class="bar-label">9月</div>
+                        </div>
+                        <div class="bar" style="height: 78%;">
+                            <div class="bar-value">109</div>
+                            <div class="bar-label">10月</div>
+                        </div>
+                        <div class="bar" style="height: 90%;">
+                            <div class="bar-value">124</div>
+                            <div class="bar-label">11月</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Generation Modal -->
+    <div id="reportModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">レポート生成</div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">レポートタイプ</label>
+                    <select class="form-select" id="reportType">
+                        <option>TCFDレポート</option>
+                        <option>TNFDレポート</option>
+                        <option>GRIスタンダード</option>
+                        <option>CDP開示</option>
+                        <option>ISO 14064検証</option>
+                        <option>SASBスタンダード</option>
+                        <option>SBTi目標設定</option>
+                        <option>カスタムレポート</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">対象期間</label>
+                    <select class="form-select" id="reportPeriod">
+                        <option>2025年 Q4</option>
+                        <option>2025年 Q3</option>
+                        <option>2025年 Q2</option>
+                        <option>2025年 Q1</option>
+                        <option>2024年度通期</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">出力形式</label>
+                    <select class="form-select" id="reportFormat">
+                        <option value="pdf">PDF</option>
+                        <option value="xlsx">Excel</option>
+                        <option value="pptx">PowerPoint</option>
+                        <option value="docx">Word</option>
+                    </select>
+                </div>
+
+                <div id="progressSection" style="display: none;">
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <div class="progress-text" id="progressText">レポート生成中... 0%</div>
+                    </div>
+                </div>
+
+                <div id="successMessage" style="display: none; padding: 1.25rem; background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-radius: 8px; border-left: 4px solid #10b981; color: #065f46; margin-top: 1.5rem;">
+                    <div style="font-weight: 700; margin-bottom: 0.5rem;">レポートが正常に生成されました</div>
+                    <div style="font-size: 0.9rem; margin-bottom: 1rem;">ファイル名: <span id="generatedFileName"></span></div>
+                    <button class="btn" id="downloadBtn" style="width: 100%;" onclick="downloadReport()">
+                        ダウンロード
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeReportModal()">キャンセル</button>
+                <button class="btn" id="generateBtn" onclick="generateReport()">生成開始</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Registration Modal -->
+    <div id="projectModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">新規プロジェクト登録</div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">プロジェクト名</label>
+                    <input type="text" class="form-select" id="projectName" placeholder="例: グリーンNH₃輸送プロジェクト" style="padding: 0.75rem;">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">サプライヤー</label>
+                    <select class="form-select" id="supplierName">
+                        <option>サプライヤーA</option>
+                        <option>サプライヤーB</option>
+                        <option>サプライヤーC</option>
+                        <option>サプライヤーD</option>
+                        <option>サプライヤーE</option>
+                        <option>サプライヤーF</option>
+                        <option>その他（新規登録）</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">測定開始日</label>
+                    <input type="date" class="form-select" id="measurementDate" value="2025-11-04" style="padding: 0.75rem;">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">予想CO₂削減量（t-CO₂）</label>
+                    <input type="number" class="form-select" id="co2Amount" placeholder="例: 2500" style="padding: 0.75rem;">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">プロジェクト種別</label>
+                    <select class="form-select" id="projectType">
+                        <option>製造プロセス改善</option>
+                        <option>再生可能エネルギー導入</option>
+                        <option>輸送効率化</option>
+                        <option>廃棄物削減</option>
+                        <option>その他</option>
+                    </select>
+                </div>
+
+                <div id="projectProgressSection" style="display: none;">
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="projectProgressFill"></div>
+                        </div>
+                        <div class="progress-text" id="projectProgressText">プロジェクト登録中... 0%</div>
+                    </div>
+                </div>
+
+                <div id="projectSuccessMessage" style="display: none; padding: 1.25rem; background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-radius: 8px; border-left: 4px solid #10b981; color: #065f46; margin-top: 1.5rem;">
+                    <div style="font-weight: 700; margin-bottom: 0.5rem;">プロジェクトが正常に登録されました</div>
+                    <div style="font-size: 0.9rem;">プロジェクトID: <span id="newProjectId"></span></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeProjectModal()">キャンセル</button>
+                <button class="btn" id="projectSubmitBtn" onclick="submitProject()">登録</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Data Modal -->
+    <div id="importModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">一括データインポート</div>
+            <div class="modal-body">
+                <div class="info-panel" style="margin-bottom: 1.5rem;">
+                    <div class="info-title">対応ファイル形式</div>
+                    <div class="info-text">CSV、Excel（.xlsx）、JSON形式のファイルをインポートできます。テンプレートファイルをダウンロードしてご利用ください。</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">データソース</label>
+                    <select class="form-select" id="dataSource">
+                        <option>MRV測定データ</option>
+                        <option>LCA分析結果</option>
+                        <option>証書情報</option>
+                        <option>サプライヤーデータ</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">ファイルを選択</label>
+                    <div style="border: 2px dashed #d1d5db; border-radius: 8px; padding: 2rem; text-align: center; background: #f9fafb; cursor: pointer; transition: all 0.3s;" 
+                         onmouseover="this.style.borderColor='#14b8a6'; this.style.background='#f0fdfa'"
+                         onmouseout="this.style.borderColor='#d1d5db'; this.style.background='#f9fafb'"
+                         onclick="document.getElementById('fileInput').click()">
+                        <input type="file" id="fileInput" accept=".csv,.xlsx,.json" style="display: none;" onchange="handleFileSelect(event)">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">📁</div>
+                        <div style="color: #64748b; font-size: 0.9rem;">クリックしてファイルを選択</div>
+                        <div id="selectedFileName" style="color: #0f766e; font-weight: 600; margin-top: 0.5rem;"></div>
+                    </div>
+                </div>
+
+                <div id="importProgressSection" style="display: none;">
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="importProgressFill"></div>
+                        </div>
+                        <div class="progress-text" id="importProgressText">データインポート中... 0%</div>
+                    </div>
+                </div>
+
+                <div id="importSuccessMessage" style="display: none; padding: 1.25rem; background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-radius: 8px; border-left: 4px solid #10b981; color: #065f46; margin-top: 1.5rem;">
+                    <div style="font-weight: 700; margin-bottom: 0.5rem;">データのインポートが完了しました</div>
+                    <div style="font-size: 0.9rem;">処理件数: <span id="importedCount"></span>件</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="downloadTemplate()">テンプレートDL</button>
+                <button class="btn btn-secondary" onclick="closeImportModal()">キャンセル</button>
+                <button class="btn" id="importSubmitBtn" onclick="submitImport()" disabled>インポート開始</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="notificationToast" style="position: fixed; top: 5rem; right: 2rem; background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%); padding: 1.25rem 1.5rem; border-radius: 10px; border: 1px solid #e5e7eb; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15); display: none; z-index: 2000; min-width: 320px; animation: slideInRight 0.3s ease;">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <div id="toastIcon" style="font-size: 1.5rem;"></div>
+            <div style="flex: 1;">
+                <div id="toastTitle" style="font-weight: 700; color: #0f172a; margin-bottom: 0.25rem;"></div>
+                <div id="toastMessage" style="font-size: 0.85rem; color: #64748b;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Optimization Plan Modal -->
+    <div id="optimizationModal" class="modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">サプライチェーン最適化プラン</div>
+            <div class="modal-body">
+                <div class="info-panel" style="margin-bottom: 1.5rem;">
+                    <div class="info-title">現状分析</div>
+                    <div class="info-text">Scope 3排出量が目標値12,000 t-CO₂に対して13,847 t-CO₂となっており、1,847 t-CO₂（12.4%）の超過が発生しています。</div>
+                </div>
+
+                <h3 style="font-size: 1.1rem; font-weight: 700; color: #0f172a; margin-bottom: 1rem;">推奨アクション</h3>
+
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div style="background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%); padding: 1.25rem; border-radius: 10px; border-left: 4px solid #14b8a6;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                            <div style="font-weight: 700; color: #0f766e;">1. 輸送ルート最適化</div>
+                            <span style="background: #14b8a6; color: white; padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.75rem; font-weight: 700;">-680 t-CO₂</span>
+                        </div>
+                        <div style="font-size: 0.85rem; color: #115e59; margin-bottom: 0.5rem;">AI推奨ルートへの変更により輸送距離を23%削減</div>
+                        <div style="font-size: 0.8rem; color: #0f766e; opacity: 0.8;">実装期間: 2週間 | 投資額: ¥8.5M</div>
+                    </div>
+
+                    <div style="background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%); padding: 1.25rem; border-radius: 10px; border-left: 4px solid #14b8a6;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                            <div style="font-weight: 700; color: #0f766e;">2. サプライヤー見直し</div>
+                            <span style="background: #14b8a6; color: white; padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.75rem; font-weight: 700;">-520 t-CO₂</span>
+                        </div>
+                        <div style="font-size: 0.85rem; color: #115e59; margin-bottom: 0.5rem;">低排出量サプライヤー3社への切り替え</div>
+                        <div style="font-size: 0.8rem; color: #0f766e; opacity: 0.8;">実装期間: 1ヶ月 | 投資額: ¥12.3M</div>
+                    </div>
+
+                    <div style="background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%); padding: 1.25rem; border-radius: 10px; border-left: 4px solid #14b8a6;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                            <div style="font-weight: 700; color: #0f766e;">3. 在庫管理効率化</div>
+                            <span style="background: #14b8a6; color: white; padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.75rem; font-weight: 700;">-380 t-CO₂</span>
+                        </div>
+                        <div style="font-size: 0.85rem; color: #115e59; margin-bottom: 0.5rem;">需要予測AIによる過剰在庫削減</div>
+                        <div style="font-size: 0.8rem; color: #0f766e; opacity: 0.8;">実装期間: 3週間 | 投資額: ¥5.8M</div>
+                    </div>
+
+                    <div style="background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%); padding: 1.25rem; border-radius: 10px; border-left: 4px solid #14b8a6;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                            <div style="font-weight: 700; color: #0f766e;">4. カーボンオフセット購入</div>
+                            <span style="background: #14b8a6; color: white; padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.75rem; font-weight: 700;">-267 t-CO₂</span>
+                        </div>
+                        <div style="font-size: 0.85rem; color: #115e59; margin-bottom: 0.5rem;">認証済みカーボンクレジット購入</div>
+                        <div style="font-size: 0.8rem; color: #0f766e; opacity: 0.8;">実装期間: 即時 | 投資額: ¥4.2M</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 1.5rem; padding: 1.25rem; background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%); border-radius: 10px; border: 1px solid #e5e7eb;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                        <span style="font-weight: 700; color: #0f172a;">合計削減効果</span>
+                        <span style="font-size: 1.5rem; font-weight: 800; color: #0f766e;">-1,847 t-CO₂</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: #64748b;">
+                        <span>総投資額</span>
+                        <span style="font-weight: 600;">¥30.8M</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: #64748b; margin-top: 0.25rem;">
+                        <span>目標達成率</span>
+                        <span style="font-weight: 600; color: #0f766e;">100%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeOptimizationModal()">後で確認</button>
+                <button class="btn" onclick="executeOptimization()">実行計画を承認</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize counters with smoother animations
+        function animateCounter(id, target, duration = 2000, suffix = '', decimals = 0) {
+            const element = document.getElementById(id);
+            if (!element) return;
+            
+            const start = 0;
+            const increment = target / (duration / 16);
+            let current = start;
+
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    current = target;
+                    clearInterval(timer);
+                }
+                const value = decimals > 0 ? current.toFixed(decimals) : Math.floor(current);
+                element.textContent = Number(value).toLocaleString();
+            }, 16);
+        }
+
+        // Start animations after banner
+        setTimeout(() => {
+            animateCounter('co2Reduction', 12847, 2000);
+            animateCounter('esgScore', 87.3, 2000, '', 1);
+            animateCounter('certificates', 2043, 2000);
+            animateCounter('costSaving', 547, 2000);
+        }, 3000);
+
+        // Real-time updates with more realistic variations
+        setInterval(() => {
+            const counters = document.querySelectorAll('.realtime-counter');
+            counters.forEach(counter => {
+                const currentText = counter.textContent.replace(/,/g, '').replace(/[^0-9.-]/g, '');
+                const current = parseFloat(currentText);
+                if (isNaN(current)) return;
+                
+                // Smaller, more realistic changes (±0.5% to 2%)
+                const changePercent = (Math.random() * 0.035) - 0.0075;
+                const change = Math.floor(current * changePercent);
+                const newValue = Math.max(0, current + change);
+                
+                // Preserve decimals if present
+                if (currentText.includes('.')) {
+                    counter.textContent = newValue.toFixed(1);
+                } else {
+                    counter.textContent = Math.floor(newValue).toLocaleString();
+                }
+            });
+        }, 4000);
+
+        // Current time update with better formatting
+        function updateTime() {
+            const now = new Date();
+            const options = {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            };
+            const timeString = now.toLocaleString('ja-JP', options);
+            const timeElement = document.getElementById('currentTime');
+            if (timeElement) {
+                timeElement.textContent = timeString;
+            }
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+
+        // Page navigation with smooth transitions
+        function showPage(pageName) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            const targetPage = document.getElementById(pageName);
+            const targetNav = event.target;
+            
+            if (targetPage) {
+                targetPage.classList.add('active');
+            }
+            if (targetNav) {
+                targetNav.classList.add('active');
+            }
+        }
+
+        // Modal functions
+        function openReportModal(reportType) {
+            const modal = document.getElementById('reportModal');
+            const reportTypeSelect = document.getElementById('reportType');
+            const progressSection = document.getElementById('progressSection');
+            const successMessage = document.getElementById('successMessage');
+            const generateBtn = document.getElementById('generateBtn');
+            
+            if (modal) modal.classList.add('active');
+            if (reportTypeSelect) reportTypeSelect.value = reportType + 'レポート';
+            if (progressSection) progressSection.style.display = 'none';
+            if (successMessage) successMessage.style.display = 'none';
+            if (generateBtn) generateBtn.style.display = 'block';
+        }
+
+        function closeReportModal() {
+            const modal = document.getElementById('reportModal');
+            if (modal) modal.classList.remove('active');
+        }
+
+        // Store generated report info
+        let generatedReportData = null;
+
+        function generateReport() {
+            const progressSection = document.getElementById('progressSection');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            const successMessage = document.getElementById('successMessage');
+            const generateBtn = document.getElementById('generateBtn');
+            const reportType = document.getElementById('reportType').value;
+            const reportPeriod = document.getElementById('reportPeriod').value;
+            const reportFormat = document.getElementById('reportFormat').value;
+
+            if (progressSection) progressSection.style.display = 'block';
+            if (successMessage) successMessage.style.display = 'none';
+            if (generateBtn) generateBtn.style.display = 'none';
+
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 12 + 3;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    
+                    // Generate filename
+                    const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+                    const typeShort = reportType.replace('レポート', '').replace('スタンダード', '').replace('開示', '').replace('検証', '').replace('目標設定', '');
+                    const fileName = `${typeShort}_${reportPeriod.replace(/年|月|日| /g, '')}_${timestamp}.${reportFormat}`;
+                    
+                    // Store report data
+                    generatedReportData = {
+                        fileName: fileName,
+                        type: reportType,
+                        period: reportPeriod,
+                        format: reportFormat
+                    };
+                    
+                    setTimeout(() => {
+                        if (successMessage) successMessage.style.display = 'block';
+                        if (progressSection) progressSection.style.display = 'none';
+                        document.getElementById('generatedFileName').textContent = fileName;
+                    }, 300);
+                }
+                if (progressFill) progressFill.style.width = progress + '%';
+                if (progressText) progressText.textContent = `レポート生成中... ${Math.floor(progress)}%`;
+            }, 150);
+        }
+
+        function downloadReport() {
+            if (!generatedReportData) return;
+            
+            // Create sample report content
+            const content = `Green NH₃ ESG統合ダッシュボード
+            
+レポートタイプ: ${generatedReportData.type}
+対象期間: ${generatedReportData.period}
+生成日時: ${new Date().toLocaleString('ja-JP')}
+
+=== サマリー ===
+総CO₂削減量: 12,847 t-CO₂
+ESGスコア: 87.3点
+証書検証数: 2,043件
+コスト削減効果: ¥547M
+
+=== 詳細分析 ===
+このレポートは実際のシステムで生成されたデモファイルです。
+本番環境では、完全なデータ分析、グラフ、表、および
+TCFD/TNFD/GRIなどの国際基準に準拠した詳細レポートが生成されます。
+
+Green NH₃ ESG Platform
+https://example.com
+`;
+            
+            // Create blob and download
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = generatedReportData.fileName.replace(/\.[^.]+$/, '.txt');
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            // Show success feedback
+            const downloadBtn = document.getElementById('downloadBtn');
+            if (downloadBtn) {
+                const originalText = downloadBtn.textContent;
+                downloadBtn.textContent = 'ダウンロード完了 ✓';
+                downloadBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                setTimeout(() => {
+                    downloadBtn.textContent = originalText;
+                    downloadBtn.style.background = '';
+                }, 2000);
+            }
+        }
+
+        // Close modal on outside click
+        const reportModal = document.getElementById('reportModal');
+        if (reportModal) {
+            reportModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeReportModal();
+                }
+            });
+        }
+
+        // Chart button interactions
+        document.querySelectorAll('.chart-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const parent = this.parentElement;
+                if (parent) {
+                    parent.querySelectorAll('.chart-btn').forEach(b => {
+                        b.classList.remove('active');
+                    });
+                }
+                this.classList.add('active');
+            });
+        });
+
+        // Add hover effects to table rows
+        document.querySelectorAll('.data-table tbody tr').forEach(row => {
+            row.addEventListener('mouseenter', function() {
+                this.style.backgroundColor = '#f0fdfa';
+            });
+            row.addEventListener('mouseleave', function() {
+                this.style.backgroundColor = '';
+            });
+        });
+
+        // === MRV Management Functions ===
+
+        // Project Modal Functions
+        function openProjectModal() {
+            const modal = document.getElementById('projectModal');
+            const progressSection = document.getElementById('projectProgressSection');
+            const successMessage = document.getElementById('projectSuccessMessage');
+            const submitBtn = document.getElementById('projectSubmitBtn');
+            
+            if (modal) modal.classList.add('active');
+            if (progressSection) progressSection.style.display = 'none';
+            if (successMessage) successMessage.style.display = 'none';
+            if (submitBtn) submitBtn.style.display = 'block';
+            
+            // Reset form
+            document.getElementById('projectName').value = '';
+            document.getElementById('co2Amount').value = '';
+        }
+
+        function closeProjectModal() {
+            const modal = document.getElementById('projectModal');
+            if (modal) modal.classList.remove('active');
+        }
+
+        function submitProject() {
+            const projectName = document.getElementById('projectName').value;
+            const supplierName = document.getElementById('supplierName').value;
+            const co2Amount = document.getElementById('co2Amount').value;
+            
+            if (!projectName || !co2Amount) {
+                showNotification('エラー', '必須項目を入力してください', '⚠️');
+                return;
+            }
+            
+            const progressSection = document.getElementById('projectProgressSection');
+            const progressFill = document.getElementById('projectProgressFill');
+            const progressText = document.getElementById('projectProgressText');
+            const successMessage = document.getElementById('projectSuccessMessage');
+            const submitBtn = document.getElementById('projectSubmitBtn');
+            
+            if (progressSection) progressSection.style.display = 'block';
+            if (successMessage) successMessage.style.display = 'none';
+            if (submitBtn) submitBtn.style.display = 'none';
+            
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 15 + 5;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    
+                    // Generate project ID
+                    const projectId = `PRJ-2025-${String(Math.floor(Math.random() * 900) + 100).padStart(3, '0')}`;
+                    
+                    setTimeout(() => {
+                        if (successMessage) successMessage.style.display = 'block';
+                        if (progressSection) progressSection.style.display = 'none';
+                        document.getElementById('newProjectId').textContent = projectId;
+                        
+                        showNotification('登録完了', `${projectName} を登録しました`, '✓');
+                        
+                        // Close modal after delay
+                        setTimeout(() => {
+                            closeProjectModal();
+                        }, 2000);
+                    }, 300);
+                }
+                if (progressFill) progressFill.style.width = progress + '%';
+                if (progressText) progressText.textContent = `プロジェクト登録中... ${Math.floor(progress)}%`;
+            }, 120);
+        }
+
+        // Import Modal Functions
+        function openImportModal() {
+            const modal = document.getElementById('importModal');
+            const progressSection = document.getElementById('importProgressSection');
+            const successMessage = document.getElementById('importSuccessMessage');
+            const submitBtn = document.getElementById('importSubmitBtn');
+            
+            if (modal) modal.classList.add('active');
+            if (progressSection) progressSection.style.display = 'none';
+            if (successMessage) successMessage.style.display = 'none';
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = '0.5';
+            }
+            
+            document.getElementById('selectedFileName').textContent = '';
+        }
+
+        function closeImportModal() {
+            const modal = document.getElementById('importModal');
+            if (modal) modal.classList.remove('active');
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                document.getElementById('selectedFileName').textContent = file.name;
+                const submitBtn = document.getElementById('importSubmitBtn');
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.style.opacity = '1';
+                }
+            }
+        }
+
+        function downloadTemplate() {
+            const content = `プロジェクトID,サプライヤー,測定日,CO₂削減量,ステータス
+PRJ-2025-XXX,サプライヤー名,2025-11-04,1000,検証待
+PRJ-2025-XXX,サプライヤー名,2025-11-04,2000,検証待`;
+            
+            const blob = new Blob([content], { type: 'text/csv;charset=utf-8' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'MRV_Template.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            showNotification('ダウンロード', 'テンプレートをダウンロードしました', '📥');
+        }
+
+        function submitImport() {
+            const dataSource = document.getElementById('dataSource').value;
+            const fileInput = document.getElementById('fileInput');
+            
+            if (!fileInput.files[0]) {
+                showNotification('エラー', 'ファイルを選択してください', '⚠️');
+                return;
+            }
+            
+            const progressSection = document.getElementById('importProgressSection');
+            const progressFill = document.getElementById('importProgressFill');
+            const progressText = document.getElementById('importProgressText');
+            const successMessage = document.getElementById('importSuccessMessage');
+            const submitBtn = document.getElementById('importSubmitBtn');
+            
+            if (progressSection) progressSection.style.display = 'block';
+            if (successMessage) successMessage.style.display = 'none';
+            if (submitBtn) submitBtn.style.display = 'none';
+            
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 10 + 5;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    
+                    const importedCount = Math.floor(Math.random() * 50) + 20;
+                    
+                    setTimeout(() => {
+                        if (successMessage) successMessage.style.display = 'block';
+                        if (progressSection) progressSection.style.display = 'none';
+                        document.getElementById('importedCount').textContent = importedCount;
+                        
+                        showNotification('インポート完了', `${importedCount}件のデータをインポートしました`, '✓');
+                        
+                        setTimeout(() => {
+                            closeImportModal();
+                        }, 2000);
+                    }, 300);
+                }
+                if (progressFill) progressFill.style.width = progress + '%';
+                if (progressText) progressText.textContent = `データインポート中... ${Math.floor(progress)}%`;
+            }, 150);
+        }
+
+        // Export and Certificate Functions
+        function exportVerificationReport() {
+            showNotification('処理中', '検証レポートを生成しています...', '⏳');
+            
+            setTimeout(() => {
+                const content = `Green NH₃ MRV検証レポート
+生成日時: ${new Date().toLocaleString('ja-JP')}
+
+=== 検証済プロジェクト ===
+PRJ-2025-001: サプライヤーA - 1,247 t-CO₂
+PRJ-2025-004: サプライヤーD - 1,876 t-CO₂
+PRJ-2025-006: サプライヤーF - 2,943 t-CO₂
+
+総削減量: 6,066 t-CO₂
+検証ステータス: 全件承認済
+ISO 14064-1準拠
+
+Green NH₃ ESG Platform
+`;
+                
+                const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `MRV_Verification_Report_${new Date().toISOString().slice(0, 10)}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                
+                showNotification('完了', '検証レポートをダウンロードしました', '✓');
+            }, 1500);
+        }
+
+        function requestCertificate() {
+            showNotification('申請中', '証書発行申請を処理しています...', '⏳');
+            
+            setTimeout(() => {
+                const certNumber = `CERT-NH3-2025-${String(Math.floor(Math.random() * 9000) + 1000).padStart(4, '0')}`;
+                showNotification('申請完了', `証書番号: ${certNumber}\n発行まで3-5営業日`, '✓');
+            }, 2000);
+        }
+
+        // Notification Toast Function
+        function showNotification(title, message, icon) {
+            const toast = document.getElementById('notificationToast');
+            const toastIcon = document.getElementById('toastIcon');
+            const toastTitle = document.getElementById('toastTitle');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            if (toastIcon) toastIcon.textContent = icon;
+            if (toastTitle) toastTitle.textContent = title;
+            if (toastMessage) toastMessage.textContent = message;
+            
+            if (toast) {
+                toast.style.display = 'block';
+                toast.style.animation = 'slideInRight 0.3s ease';
+                
+                setTimeout(() => {
+                    toast.style.animation = 'slideOutRight 0.3s ease';
+                    setTimeout(() => {
+                        toast.style.display = 'none';
+                    }, 300);
+                }, 3000);
+            }
+        }
+
+        // Close modals on outside click
+        document.getElementById('projectModal')?.addEventListener('click', function(e) {
+            if (e.target === this) closeProjectModal();
+        });
+        
+        document.getElementById('importModal')?.addEventListener('click', function(e) {
+            if (e.target === this) closeImportModal();
+        });
+
+        // === Alert Banner Functions ===
+        function showOptimizationPlan() {
+            const modal = document.getElementById('optimizationModal');
+            if (modal) modal.classList.add('active');
+        }
+
+        function closeOptimizationModal() {
+            const modal = document.getElementById('optimizationModal');
+            if (modal) modal.classList.remove('active');
+        }
+
+        function executeOptimization() {
+            showNotification('実行開始', '最適化プランの実行を開始しました', '⚡');
+            closeOptimizationModal();
+            
+            setTimeout(() => {
+                dismissAlert();
+                showNotification('完了予定', '全アクション完了まで約2ヶ月', '✓');
+            }, 1500);
+        }
+
+        function dismissAlert() {
+            const alert = document.querySelector('.alert-banner-advanced');
+            if (alert) {
+                alert.style.animation = 'slideOutUp 0.3s ease';
+                setTimeout(() => {
+                    alert.style.display = 'none';
+                }, 300);
+            }
+        }
+
+        // Close optimization modal on outside click
+        document.getElementById('optimizationModal')?.addEventListener('click', function(e) {
+            if (e.target === this) closeOptimizationModal();
+        });
+    </script>
+</body>
+</html>
